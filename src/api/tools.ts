@@ -14,14 +14,14 @@ export const isRetryError = (error: FetchBaseQueryError) => {
     }
   }
   // 服务器错误 (5xx)
-  if (typeof error.originalStatus === 'number' && error.originalStatus >= 500) {
+  if (error.status === 'PARSING_ERROR' && typeof error.originalStatus === 'number' && error.originalStatus >= 500) {
     return {
       flag: true,
       maxRetries: 5
     }
   }
   // 特定客户端错误
-  if ([429, 409].includes(error.originalStatus)) {
+  if (error.status === 'PARSING_ERROR' && [429, 409].includes(error.originalStatus)) {
     return {
       flag: true,
       maxRetries: 2

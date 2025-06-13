@@ -5,12 +5,13 @@ import { openLoginModal } from '@/stores/authSlice'
 import storage from '@/utils/storage'
 import { sleepTime } from '@/utils/tools'
 import { isRetryError } from './tools'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 // 定义后端响应格式
-interface BackendResponse<T> {
+interface BackendResponse {
   code: number;
   message: string;
-  data: T | null;
+  data: object;
 }
 
 const ContentTypeEnum  = {
@@ -57,7 +58,8 @@ const baseQueryWithInterceptors: BaseQueryFn = async (args, api, extraOptions) =
   // 响应拦截器逻辑
   // ----------------------------
   // 如果发生特定错误，则重试
-  const retryData = isRetryError(result.error)
+  const errorObj = result.error as FetchBaseQueryError
+  const retryData = isRetryError(errorObj)
   if (retryData.flag) {
     // 重试逻辑
     const maxRetries = retryData.maxRetries;
@@ -67,22 +69,22 @@ const baseQueryWithInterceptors: BaseQueryFn = async (args, api, extraOptions) =
       const delay = Math.min(1000 * 2 ** attempt, 30000);
       await sleepTime(delay)
       result = await rawBaseQuery(args, api, extraOptions);
-      if (!result.error) break; // 成功则退出
+      if (!errorObj) break; // 成功则退出
       attempt++;
     }
   }
 
   // 处理网络错误或 HTTP 错误（如 4xx/5xx）
-  if (result.error) {
+  if (errorObj) {
     return result; // 直接返回原生错误
   }
 
   // 解析业务响应
-  const backendResponse = result.data as BackendResponse<unknown>;
-  if (result.data?.code !== 0 || result.error?.status === 401) {
+  const backendResponse = result.data as BackendResponse;
+  if (backendResponse.code !== 0) {
     // 处理 401 未授权：清除令牌并跳转登录
     localStorage.removeItem('token');
-    api.dispatch(openLoginModal())
+    api.dispatch(openLoginModal(null))
     return {
       error: {
         status: 'CUSTOM_ERROR',

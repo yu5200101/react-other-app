@@ -27,7 +27,7 @@ interface PhoneInfo {
   mobile: string
   captcha: string
 }
-export default () => {
+const Login: React.FC = () => {
   const { token: themeOptions } = theme.useToken();
   const [loginType, setLoginType] = useState<LoginType>('phone');
   const navigate = useNavigate()
@@ -193,3 +193,5 @@ export default () => {
     </ProConfigProvider>
   );
 };
+
+export default Login

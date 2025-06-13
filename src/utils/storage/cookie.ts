@@ -53,9 +53,9 @@ const CookieUtils = {
     }
   },
 
-  getItem(name:string, options:Options = defaultOptions): boolean | string | null {
+  getItem(name:string): boolean | string | null {
     try {
-      return Cookies.get(name, options) || null
+      return Cookies.get(name) || null
     } catch (error) {
       return false
     }

@@ -1,6 +1,6 @@
 // src/store/authSlice.ts
 import { createSlice } from '@reduxjs/toolkit';
-
+import type { Slice } from '@reduxjs/toolkit';
 interface AuthState {
   isLoginModalOpen: boolean;
 }
@@ -9,7 +9,7 @@ const initialState: AuthState = {
   isLoginModalOpen: false,
 };
 
-const authSlice = createSlice({
+const authSlice: Slice<AuthState> = createSlice({
   name: 'auth',
   initialState,
   reducers: {

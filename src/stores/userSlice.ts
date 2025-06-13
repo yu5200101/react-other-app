@@ -42,7 +42,7 @@ export const {
 // 带有这些参数的查询的查询结果对象。
 // 要为特定查询参数生成 selector，请调用 `select(theQueryArg)`。
 // 在这种情况下，用户查询没有参数，所以我们不向 select() 传递任何内容
-export const selectUsersResult = extendedApiSlice.endpoints.getUserInfo.select()
+export const selectUsersResult = extendedApiSlice.endpoints.getUserInfo.select(null)
 
 export const selectUsersData = createSelector(
   selectUsersResult,

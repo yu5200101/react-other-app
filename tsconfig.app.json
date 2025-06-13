@@ -6,6 +6,8 @@
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES5",
+    // 来允许在低版本目标（如ES5）中正确编译迭代器
+    "downlevelIteration": true,
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
