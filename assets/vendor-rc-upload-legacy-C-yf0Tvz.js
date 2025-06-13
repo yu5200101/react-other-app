@@ -1,0 +1,1 @@
+System.register(["./vendor-rc-util-legacy-a2YRuNuV.js","./vendor-classnames-legacy-s8kLTKZU.js","./vendor-react-legacy-DIEzC_0n.js"],(function(e,n){"use strict";return{setters:[null,null,null],execute:function(){}}}));
