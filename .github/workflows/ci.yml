@@ -1,31 +1,42 @@
-name: CI/CD Pipeline
+name: Build and Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]  # 触发分支
-  pull_request:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 必须授予写入权限才能推送到gh-pages
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Checkout main
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取所有历史记录以便创建gh-pages
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 18
+        node-version: 20
+        cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci  # 比npm install更快更稳定
+      run: npm ci
 
     - name: Build project
-      run: npm run build  # 生成静态文件
+      run: npm run build  # 执行package.json中的build命令
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+    - name: Configure Git
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+
+    - name: Deploy to gh-pages
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        name: production-build
-        path: dist/  # 构建输出目录
+        github_token: ${{ secrets.GITHUB_TOKEN }}  # 自动生成，无需额外配置
+        publish_dir: ./dist  # Vite默认输出目录
+        publish_branch: gh-pages  # 目标分支
+        force_orphan: true  # 每次清理历史记录
+        keep_files: false   # 完全覆盖目标分支
