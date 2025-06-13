@@ -53,7 +53,9 @@ const router = createBrowserRouter([
     loader: loader,
     Component: NotFound
   }
-])
+], {
+  basename: '/react-other-app'
+})
 
 async function loader({ params } : LoaderFunctionArgs) {
   return {

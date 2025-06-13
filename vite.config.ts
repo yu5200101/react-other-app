@@ -6,6 +6,7 @@ import checker from 'vite-plugin-checker'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/react-other-app/',
   plugins: [
     react(),
     legacy({
@@ -49,6 +50,45 @@ export default defineConfig({
       },
       format: {
         comments: false // 移除所有注释
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          // 精确匹配包名而不是路径
+          const packageMap = {
+            'react': 'vendor-react',
+            'react-dom': 'vendor-react-dom',
+            'react-router': 'vendor-react-router',
+            '@reduxjs/toolkit': 'vendor-redux',
+            'react-redux': 'vendor-redux',
+            'lodash': 'vendor-lodash',
+            'lodash-es': 'vendor-lodash',
+            'axios': 'vendor-axios',
+          }
+          // 检查是否在 node_modules 中
+          if (id.includes('node_modules')) {
+            // 优先匹配已知包
+            for (const [pkg, chunkName] of Object.entries(packageMap)) {
+              if (id.includes(`/node_modules/${pkg}/`)) {
+                return chunkName
+              }
+            }
+            
+            // 按顶级包名分组其他依赖
+            const match = id.match(/node_modules\/([^\/]+)/)
+            return match ? `vendor-${match[1]}` : 'vendor-other'
+          }
+          // 业务代码拆分
+          if (id.includes('src/pages')) return 'pages'
+          if (id.includes('src/hooks')) return 'hooks'
+          if (id.includes('src/stores')) return 'stores'
+          if (id.includes('src/utils')) return 'utils'
+        },
+        // 优化 chunk 命名
+        chunkFileNames: 'assets/[name]-[hash].js',
+        // 确保入口文件命名
+        entryFileNames: 'assets/[name]-[hash].js'
       }
     }
   }
