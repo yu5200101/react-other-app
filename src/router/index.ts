@@ -8,18 +8,10 @@ import teaching from '@/pages/home/course/teaching'
 import trial from '@/pages/home/course/trial'
 import login from '@/pages/login'
 import NotFound from '@/pages/NotFound'
-import storage from '@/utils/storage'
-import { locationReplace } from '@/utils/navigate'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    // loader可以做路由守卫的功能
-    loader: () => {
-      const token = storage.localStorage.getItem('token')
-      if (token) return
-      locationReplace('/login')
-    },
     Component: homeLayout,
     children: [{
       index: true,

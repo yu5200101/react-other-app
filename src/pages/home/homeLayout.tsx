@@ -8,10 +8,11 @@ import {
 import type { ProSettings } from '@ant-design/pro-components';
 import { PageContainer, ProCard, ProLayout } from '@ant-design/pro-components';
 // import { Alert, Button, Input, Space } from 'antd';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import defaultProps from './_defaultProps';
 import rules from '@/utils/rules'
+import storage from '@/utils/storage'
 
 export default () => {
   const settings: ProSettings | undefined = {
@@ -21,6 +22,13 @@ export default () => {
 
   const location = useLocation()
   const navigate = useNavigate()
+  const token = storage.localStorage.getItem('token')
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login')
+    }
+  }, [token])
 
   const originPathName = useMemo(() => location.pathname, [location])
   const [pathname, setPathname] = useState(originPathName);
@@ -35,6 +43,8 @@ export default () => {
   const openHome = () => {
     goToNextPage('/')
   }
+
+  if (!token) return <></>
 
   return (
     <>
