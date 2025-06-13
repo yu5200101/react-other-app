@@ -1,0 +1,31 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]  # 触发分支
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install dependencies
+      run: npm ci  # 比npm install更快更稳定
+
+    - name: Build project
+      run: npm run build  # 生成静态文件
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: production-build
+        path: dist/  # 构建输出目录
