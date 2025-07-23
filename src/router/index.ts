@@ -7,6 +7,7 @@ import course from '@/pages/home/course'
 import teaching from '@/pages/home/course/teaching'
 import trial from '@/pages/home/course/trial'
 import login from '@/pages/login'
+import process from '@/pages/process'
 import NotFound from '@/pages/NotFound'
 
 const router = createBrowserRouter([
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
     path: 'login',
     loader: loader,
     Component: login
+  }, {
+    path: 'process',
+    loader: loader,
+    Component: process
   }, {
     path: '*',
     loader: loader,

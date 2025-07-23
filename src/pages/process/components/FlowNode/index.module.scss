@@ -1,0 +1,50 @@
+.flowNode {
+  position: absolute;
+  cursor: move;
+  transition: opacity 0.2s;
+
+  &:hover {
+    .nodeCanvas {
+      box-shadow: 0 0 0 2px #1890ff;
+    }
+  }
+  .nodeCanvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #fff;
+    border: 2px solid #1890ff;
+    border-radius: 50%;
+    cursor: crosshair;
+    z-index: 10;
+    &:hover {
+      background-color: #1890ff;
+    }
+
+    &.top {
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%)
+    }
+    &.right {
+      top: 50%;
+      right: 0;
+      transform: translate(50%, -50%)
+    }
+    &.bottom {
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 50%)
+    }
+    &.left {
+      left: 0;
+      top: 50%;
+      transform: translate(-50%, -50%)
+    }
+  }
+}

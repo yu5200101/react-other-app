@@ -38,6 +38,11 @@ export default defineConfig({
     }
   },
   css: {
+    // preprocessorOptions: {
+    //   scss: {
+    //     additionalData: `@import "@/styles/variables.scss";`, // 这里添加全局变量文件
+    //   }
+    // },
     postcss: {}
   },
   build: {
@@ -74,7 +79,6 @@ export default defineConfig({
                 return chunkName
               }
             }
-            
             // 按顶级包名分组其他依赖
             const match = id.match(/node_modules\/([^\/]+)/)
             return match ? `vendor-${match[1]}` : 'vendor-other'
