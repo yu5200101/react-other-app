@@ -2,12 +2,6 @@
   position: absolute;
   cursor: move;
   transition: opacity 0.2s;
-
-  &:hover {
-    .nodeCanvas {
-      box-shadow: 0 0 0 2px #1890ff;
-    }
-  }
   .nodeCanvas {
     width: 100%;
     height: 100%;
@@ -15,36 +9,52 @@
 
   .handle {
     position: absolute;
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     background-color: #fff;
-    border: 2px solid #1890ff;
+    box-sizing: border-box;
+    border: 1px solid #1890ff;
     border-radius: 50%;
     cursor: crosshair;
     z-index: 10;
-    &:hover {
-      background-color: #1890ff;
+    &.rect {
+      border-radius: unset;
     }
-
+    &.top-left {
+      top: 5px;
+      left: 5px;
+    }
     &.top {
-      top: 0;
+      top: 5px;
       left: 50%;
-      transform: translate(-50%, -50%)
+      transform: translate(-50%, 0)
+    }
+    &.top-right {
+      top: 5px;
+      right: 5px;
     }
     &.right {
       top: 50%;
-      right: 0;
-      transform: translate(50%, -50%)
+      right: 5px;
+      transform: translate(0, -50%)
+    }
+    &.bottom-left {
+      bottom: 5px;
+      left: 5px;
     }
     &.bottom {
-      bottom: 0;
+      bottom: 5px;
       left: 50%;
-      transform: translate(-50%, 50%)
+      transform: translate(-50%, 0)
+    }
+    &.bottom-right {
+      bottom: 5px;
+      right: 5px;
     }
     &.left {
-      left: 0;
+      left: 5px;
       top: 50%;
-      transform: translate(-50%, -50%)
+      transform: translate(0, -50%)
     }
   }
 }

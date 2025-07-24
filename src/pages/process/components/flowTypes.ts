@@ -1,4 +1,5 @@
 export type PositionType = 'top' | 'right' | 'bottom' | 'left';
+export type ResizeType = PositionType | 'topLeft' | 'topRight' | 'bottomRight' | 'bottomLeft'
 export interface NodeData {
   id: string;
   strikeType: 'node' | 'edge'
@@ -12,7 +13,7 @@ export interface NodeData {
   sourceHandle?: PositionType
   target?: string;
   targetHandle?: PositionType
-  points?: { x: number; y: number }[];
+  points?: Array<PositionXY>;
 }
 
 export interface DragItem {
@@ -21,3 +22,17 @@ export interface DragItem {
   nodeType?: 'rectangle' | 'diamond' | 'circle';
 }
 
+export interface PositionXY {
+  x: number
+  y: number
+}
+
+export type PathAry = Array<PositionXY>
+
+export interface PathParams {
+  moveData: PositionXY,
+  setCanvasSize: (data: PositionXY) => void,
+  positionTL: PositionXY,
+  setPositionTL: (data: PositionXY) => void,
+  data: NodeData
+}

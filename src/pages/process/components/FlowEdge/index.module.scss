@@ -1,4 +1,9 @@
 .flowEdge {
   position: absolute;
-  pointer-events: none;
+  border: 1px solid #000000;
+
+  .canvas-box {
+    width: 100%;
+    height: 100%;
+  }
 }

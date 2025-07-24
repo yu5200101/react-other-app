@@ -9,8 +9,8 @@ const FlowEditor: React.FC = () => {
   const [nodes, setNodes] = useState<NodeData[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoverNodeId, setHoverNodeId] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false)
+  const canvasBoxRef = useRef<HTMLDivElement>(null);
+  const [drawingId, setIsDrawingId] = useState<string>('')
   const handleDragStart = (e: React.DragEvent, item: DragItem) => {
     e.dataTransfer.setData('application/json', JSON.stringify(item));
     e.dataTransfer.effectAllowed = 'move';
@@ -27,12 +27,12 @@ const FlowEditor: React.FC = () => {
     if (!data) return;
 
     const item: DragItem = JSON.parse(data);
-    const canvasRect = canvasRef.current?.getBoundingClientRect();
-    if (!canvasRect) return;
+    const canvasBox = canvasBoxRef.current?.getBoundingClientRect();
+    if (!canvasBox) return;
 
     if (item.type === 'nodeType') {
-      const x = e.clientX - canvasRect.left;
-      const y = e.clientY - canvasRect.top;
+      const x = e.clientX - canvasBox.left;
+      const y = e.clientY - canvasBox.top;
 
       const newNode: NodeData = {
         id: `node-${Date.now()}`,
@@ -40,8 +40,8 @@ const FlowEditor: React.FC = () => {
         strikeType: 'node',
         x,
         y,
-        width: 100,
-        height: 60,
+        width: 140,
+        height: 92,
       };
 
       setNodes([...nodes, newNode]);
@@ -50,19 +50,23 @@ const FlowEditor: React.FC = () => {
 
   const handleStartEdgeDrag = (
     data: NodeData,
-    handleType: 'top' | 'right' | 'bottom' | 'left'
+    handleType: 'top' | 'right' | 'bottom' | 'left',
+    x: number,
+    y: number,
   ) => {
+    const id = `edge-${Date.now()}`
     const newEdge: NodeData = {
-      id: `edge-${Date.now()}`,
+      id,
       strikeType: 'edge',
       source: data.id,
       sourceHandle: handleType,
+      points: [{x, y}],
       x: data.x,
       y: data.y,
       width: data.width,
       height: data.height
     };
-    setIsDrawing(true)
+    setIsDrawingId(id)
     setNodes([...nodes, newEdge]);
   };
 
@@ -70,7 +74,7 @@ const FlowEditor: React.FC = () => {
     <div className={styles.flowEditor}>
       <Sidebar onDragStart={handleDragStart} />
       <div
-        ref={canvasRef}
+        ref={canvasBoxRef}
         className={styles.flowCanvas}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -91,8 +95,8 @@ const FlowEditor: React.FC = () => {
           /> :
           // 折线
           <FlowEdge
-            isDrawing={isDrawing}
-            onSetIsDrawing={setIsDrawing}
+            isDrawing={drawingId === node.id}
+            onSetIsDrawing={setIsDrawingId}
             key={node.id} data={node} zIndex={index + 1}/>
         ))}
       </div>

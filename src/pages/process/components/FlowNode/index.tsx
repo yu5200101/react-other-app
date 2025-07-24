@@ -1,7 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import styles from './index.module.scss';
-import type { NodeData, DragItem } from '../flowTypes';
+import type { NodeData, DragItem, PositionType, ResizeType } from '../flowTypes';
 import classnames from 'classnames'
+import {
+  SAFE_DISTANCE
+} from '../FlowEdge/handlePath'
 
 interface FlowNodeProps {
   data: NodeData;
@@ -12,7 +15,9 @@ interface FlowNodeProps {
   onHover: (id: string) => void;
   onStartEdgeDrag: (
     data: NodeData,
-    handleType: 'top' | 'right' | 'bottom' | 'left'
+    handleType: PositionType,
+    x: number,
+    y: number
   ) => void;
   onDragStart: (e: React.DragEvent, item: DragItem) => void;
 }
@@ -40,9 +45,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const isFlag = isSelected || isHovered
-
-    function drawRoundRect(ctx: any, width: number, height: number, radius: number, color: string = '#3498db') {
+    function drawRoundRect(ctx: any, width: number, height: number, radius: number) {
       ctx.beginPath();
       ctx.moveTo(radius, 0); // 左上角起点
       ctx.lineTo(width - radius, 0); // 右上边
@@ -54,21 +57,20 @@ const FlowNode: React.FC<FlowNodeProps> = ({
       ctx.lineTo(0, radius); // 左上边
       ctx.arcTo(0, 0, radius, 0, radius); // 左上角圆角
       ctx.closePath();
-      ctx.strokeStyle = color;
       ctx.stroke();
     }
     // Draw node based on type
     switch (data.type) {
       case 'rectangle':
-        ctx.fillStyle = isFlag ? '#e6f7ff' : '#fff';
-        ctx.strokeStyle = isFlag ? '#1890ff' : '#333';
+        ctx.fillStyle = 'transparent';
+        ctx.strokeStyle = '#333333';
         ctx.lineWidth = 2;
         ctx.fillRect(0, 0, data.width, data.height);
-        ctx.strokeRect(0, 0, data.width, data.height);
+        ctx.strokeRect(SAFE_DISTANCE, SAFE_DISTANCE, data.width - 20, data.height - 20);
         break;
       case 'diamond':
-        ctx.fillStyle = isFlag ? '#e6f7ff' : '#fff';
-        ctx.strokeStyle = isFlag ? '#1890ff' : '#333';
+        ctx.fillStyle = 'transparent';
+        ctx.strokeStyle = '#333333';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(data.width / 2, 0);
@@ -80,10 +82,10 @@ const FlowNode: React.FC<FlowNodeProps> = ({
         ctx.stroke();
         break;
       case 'circle':
-        ctx.fillStyle = isFlag ? '#e6f7ff' : '#fff';
+        ctx.fillStyle = 'transparent';
+        ctx.strokeStyle = '#333333';
         ctx.lineWidth = 2;
-        const color = isFlag ? '#1890ff' : '#333';
-        drawRoundRect(ctx, data.width, data.height, data.height / 2, color)
+        drawRoundRect(ctx, data.width, data.height, data.height / 2)
         break;
     }
 
@@ -95,14 +97,21 @@ const FlowNode: React.FC<FlowNodeProps> = ({
       ctx.textBaseline = 'middle';
       ctx.fillText(data.text, data.width / 2, data.height / 2);
     }
-  }, [data, isSelected, isHovered]);
+  }, [data]);
 
-  const handleHandleMouseDown = (
-    handleType: 'top' | 'right' | 'bottom' | 'left',
+  const handlePoint = (
+    handleType: PositionType,
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
-    onStartEdgeDrag(data, handleType);
+    onStartEdgeDrag(data, handleType, e.clientX, e.clientY);
+  };
+  const handleResize = (
+    handleType: ResizeType,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    // onStartEdgeDrag(data, handleType);
   };
 
   return (
@@ -110,6 +119,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
       ref={nodeRef}
       id={data.id}
       className={styles.flowNode}
+      // 相对于flowCanvas的定位
       style={{
         zIndex: zIndex,
         left: data.x,
@@ -133,19 +143,60 @@ const FlowNode: React.FC<FlowNodeProps> = ({
         <>
           <div
             className={classnames(styles.handle, styles.top)}
-            onMouseDown={(e) => handleHandleMouseDown('top', e)}
+            onMouseDown={(e) => handlePoint('top', e)}
           />
           <div
             className={classnames(styles.handle, styles.right)}
-            onMouseDown={(e) => handleHandleMouseDown('right', e)}
+            onMouseDown={(e) => handlePoint('right', e)}
           />
           <div
             className={classnames(styles.handle, styles.bottom)}
-            onMouseDown={(e) => handleHandleMouseDown('bottom', e)}
+            onMouseDown={(e) => handlePoint('bottom', e)}
           />
           <div
             className={classnames(styles.handle, styles.left)}
-            onMouseDown={(e) => handleHandleMouseDown('left', e)}
+            onMouseDown={(e) => handlePoint('left', e)}
+          />
+        </>
+      )}
+      {/* 调整大小的8个小点 */}
+      {isSelected && (
+        <>
+          <div
+            className={classnames(styles.handle,
+              styles.rect, styles['top-left'])}
+            onMouseDown={(e) => handleResize('topLeft', e)}
+          />
+          <div
+            className={classnames(styles.handle,
+              styles.rect, styles.top)}
+            onMouseDown={(e) => handleResize('top', e)}
+          />
+          <div
+            className={classnames(styles.handle,
+              styles.rect, styles['top-right'])}
+            onMouseDown={(e) => handleResize('topRight', e)}
+          />
+          <div
+            className={classnames(styles.handle, styles.rect, styles.right)}
+            onMouseDown={(e) => handleResize('right', e)}
+          />
+          <div
+            className={classnames(styles.handle,
+              styles.rect, styles['bottom-right'])}
+            onMouseDown={(e) => handleResize('bottomRight', e)}
+          />
+          <div
+            className={classnames(styles.handle, styles.rect, styles.bottom)}
+            onMouseDown={(e) => handleResize('bottom', e)}
+          />
+          <div
+            className={classnames(styles.handle, styles.rect, styles['bottom-left'])}
+            onMouseDown={(e) => handleResize('bottomLeft', e)}
+          />
+          <div
+            className={classnames(styles.handle, styles.rect, styles.left)}
+            onMouseDown={(e) => handleResize('left', e)}
           />
         </>
       )}
