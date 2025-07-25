@@ -4,7 +4,9 @@ import type { NodeData, PositionType, PositionXY, PathAry } from '../flowTypes';
 import {
   SAFE_DISTANCE,
   handleTopPath,
-  handleRightPath
+  handleRightPath,
+  handleLeftPath,
+  handleBottomPath
 } from './handlePath'
 
 interface FlowEdgeProps {
@@ -84,8 +86,8 @@ const FlowEdge: React.FC<FlowEdgeProps> = ({
     const lib = {
       top: handleTopPath,
       right: handleRightPath,
-      bottom: handleTopPath,
-      left: handleTopPath
+      bottom: handleBottomPath,
+      left: handleLeftPath
     }
     return lib[direction] && lib[direction]({
       moveData,
