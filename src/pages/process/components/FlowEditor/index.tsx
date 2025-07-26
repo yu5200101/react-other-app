@@ -3,14 +3,19 @@ import styles from './index.module.scss';
 import FlowNode from '../FlowNode';
 import FlowEdge from '../FlowEdge';
 import Sidebar from '../Sidebar';
+import { useImmer } from 'use-immer'
 import type { NodeData, DragItem } from '../flowTypes';
+import {
+  SAFE_DISTANCE
+} from '../FlowEdge/handlePath'
 
 const FlowEditor: React.FC = () => {
-  const [nodes, setNodes] = useState<NodeData[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [nodes, setNodes] = useImmer<NodeData[]>([]);
+  const [clickNodeId, setClickNodeId] = useState<string | null>(null);
   const [hoverNodeId, setHoverNodeId] = useState<string | null>(null);
+  const [moveNode, setMoveNode] = useState<NodeData>({} as NodeData);
   const canvasBoxRef = useRef<HTMLDivElement>(null);
-  const [drawingId, setIsDrawingId] = useState<string>('')
+  const [drawEdgeId, setDrawEdgeId] = useState<string>('')
   const handleDragStart = (e: React.DragEvent, item: DragItem) => {
     e.dataTransfer.setData('application/json', JSON.stringify(item));
     e.dataTransfer.effectAllowed = 'move';
@@ -44,31 +49,70 @@ const FlowEditor: React.FC = () => {
         height: 92,
       };
 
-      setNodes([...nodes, newNode]);
+      setNodes((draft) => {
+        draft.push(newNode)
+      })
     }
   };
 
   const handleStartEdgeDrag = (
     data: NodeData,
-    handleType: 'top' | 'right' | 'bottom' | 'left',
-    x: number,
-    y: number,
+    handleType: 'top' | 'right' | 'bottom' | 'left'
   ) => {
+    const canvasBox = canvasBoxRef.current?.getBoundingClientRect();
+    if (!canvasBox) return
     const id = `edge-${Date.now()}`
     const newEdge: NodeData = {
       id,
       strikeType: 'edge',
       source: data.id,
       sourceHandle: handleType,
-      points: [{x, y}],
-      x: data.x,
-      y: data.y,
-      width: data.width,
-      height: data.height
+      boxLeft: canvasBox.left,
+      boxTop: canvasBox.top,
+      x: data.x + SAFE_DISTANCE,
+      y: data.y + SAFE_DISTANCE,
+      width: data.width - SAFE_DISTANCE * 2,
+      height: data.height - SAFE_DISTANCE * 2
     };
-    setIsDrawingId(id)
-    setNodes([...nodes, newEdge]);
-  };
+    setDrawEdgeId(id)
+    setNodes((draft) => {
+      const todo = draft.find((item) => item.id === data.id) as NodeData
+      if (!Array.isArray(todo.points)) {
+        todo.points = []
+      }
+      todo.points.push({type: handleType, id})
+      draft.push(newEdge)
+    })
+  }
+
+  const handleNodeMouseMove = (x: number, y: number, id: string) => {
+    setNodes((draft) => {
+      const todo = draft.find((item) => item.id === id) as NodeData
+      if (todo) {
+        todo.x = x
+        todo.y = y
+      }
+      if (Array.isArray(todo.points)) {
+        const edgeIdList = todo.points.map(item => item.id)
+        edgeIdList.forEach(edgeId => {
+          const edgeTodo = draft.find((item) => item.id === edgeId) as NodeData
+          edgeTodo.x = x + SAFE_DISTANCE
+          edgeTodo.y = y + SAFE_DISTANCE
+        })
+      }
+    })
+  }
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement
+    if (!target.className.includes('nodeCanvas')) {
+      setClickNodeId('')
+    }
+  }
+  const getIsDrawing = (id: string): boolean => {
+    const todo = nodes.find((item) => item.id === id) as NodeData
+    if (todo.source === moveNode.id) return true
+    return false
+  }
 
   return (
     <div className={styles.flowEditor}>
@@ -76,6 +120,7 @@ const FlowEditor: React.FC = () => {
       <div
         ref={canvasBoxRef}
         className={styles.flowCanvas}
+        onClick={handleClick}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
@@ -86,18 +131,24 @@ const FlowEditor: React.FC = () => {
             zIndex={index + 1}
             key={node.id}
             data={node}
-            isSelected={selectedId === node.id}
-            isHovered={hoverNodeId === node.id}
-            onHover={setHoverNodeId}
-            onSelect={setSelectedId}
+            isMove={moveNode.id === node.id}
+            isClick={clickNodeId === node.id}
+            isHover={hoverNodeId === node.id}
+            onNodeHover={setHoverNodeId}
+            onNodeClick={setClickNodeId}
+            onSetMoveNode={setMoveNode}
             onStartEdgeDrag={handleStartEdgeDrag}
-            onDragStart={handleDragStart}
+            onNodeMouseMove={handleNodeMouseMove}
           /> :
           // 折线
           <FlowEdge
-            isDrawing={drawingId === node.id}
-            onSetIsDrawing={setIsDrawingId}
-            key={node.id} data={node} zIndex={index + 1}/>
+            isDrawing={drawEdgeId === node.id || getIsDrawing(node.id)}
+            isNodeChangeForDraw={getIsDrawing(node.id)}
+            onSetDrawEdgeId={setDrawEdgeId}
+            key={node.id}
+            data={node}
+            zIndex={index + 1}
+          />
         ))}
       </div>
     </div>

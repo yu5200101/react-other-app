@@ -19,12 +19,12 @@ const handlePath = ({
         // 安全距离5 向左移动 左边距减小
         setPositionTL({
           x: positionTL.x + moveData.x - SAFE_DISTANCE,
-          y: positionTL.y + moveData.y
+          y: positionTL.y + moveData.y - SAFE_DISTANCE
         })
       } else {
         setPositionTL({
           x: positionTL.x - SAFE_DISTANCE,
-          y: positionTL.y + moveData.y
+          y: positionTL.y + moveData.y - SAFE_DISTANCE
         })
       }
       if (moveData.x > SAFE_DISTANCE) {
@@ -120,27 +120,27 @@ const handlePath = ({
     } else {
       // 向下
       const midWidth = Math.round(data.width / 2)
-      const safeX = midWidth + SAFE_DISTANCE
+      const safeX = midWidth + SAFE_DISTANCE * 2
       if (moveData.x >= safeX) {
         setPositionTL({
           x: positionTL.x - SAFE_DISTANCE,
-          y: positionTL.y - SAFE_DISTANCE * 2
+          y: positionTL.y - SAFE_DISTANCE * 3
         })
       } else if (moveData.x < safeX && moveData.x > 0) {
         setPositionTL({
           x: positionTL.x - SAFE_DISTANCE,
-          y: positionTL.y - SAFE_DISTANCE * 2
+          y: positionTL.y - SAFE_DISTANCE * 3
         })
       } else if (moveData.x <= -safeX) {
         // 向左移动 左边距减小
         setPositionTL({
           x: positionTL.x + moveData.x - SAFE_DISTANCE,
-          y: positionTL.y - SAFE_DISTANCE * 2
+          y: positionTL.y - SAFE_DISTANCE * 3
         })
       } else {
         setPositionTL({
           x: positionTL.x - safeX - SAFE_DISTANCE,
-          y: positionTL.y - SAFE_DISTANCE * 2
+          y: positionTL.y - SAFE_DISTANCE * 3
         })
       }
       if (moveData.x >= safeX) {

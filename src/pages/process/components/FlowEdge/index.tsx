@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import styles from './index.module.scss';
 import type { NodeData, PositionType, PositionXY, PathAry } from '../flowTypes';
 import {
@@ -12,8 +12,9 @@ import {
 interface FlowEdgeProps {
   data: NodeData;
   isDrawing: boolean
+  isNodeChangeForDraw: boolean
   zIndex: number,
-  onSetIsDrawing: (val: string) => void
+  onSetDrawEdgeId: (val: string) => void
 }
 
 const getHandlePosition = (
@@ -73,11 +74,15 @@ const drawPath = (ctx: CanvasRenderingContext2D, path: PathAry) => {
 }
 
 const FlowEdge: React.FC<FlowEdgeProps> = ({
-  data, zIndex, isDrawing, onSetIsDrawing }) => {
+  data,
+  zIndex,
+  isDrawing,
+  isNodeChangeForDraw,
+  onSetDrawEdgeId }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const {x, y} = getHandlePosition(data)
-  const [positionTL, setPositionTL] = useState<PositionXY>({x: x, y: y})
+  const {x, y} = useMemo(() => getHandlePosition(data), [data])
+  const [positionTL, setPositionTL] = useState<PositionXY>({x, y})
   const [canvasSize, setCanvasSize] = useState<PositionXY>({x: SAFE_DISTANCE, y: SAFE_DISTANCE})
 
   // 根据移动方向生成路径
@@ -109,8 +114,8 @@ const FlowEdge: React.FC<FlowEdgeProps> = ({
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      const moveX = e.clientX - data.points[0].x
-      const moveY = e.clientY - data.points[0].y
+      const moveX = e.clientX - data.boxLeft - x
+      const moveY = e.clientY - data.boxTop - y
       // 根据当前方向生成路径
       const currentPath = generatePath({ x: moveX, y: moveY }, data.sourceHandle as PositionType);
       requestAnimationFrame(() => {
@@ -119,8 +124,11 @@ const FlowEdge: React.FC<FlowEdgeProps> = ({
     })
   }
 
-  const handleEndEdgeDrag = () => {
-    onSetIsDrawing('')
+  const lastMousePosition = useRef<PositionXY>({x: 0, y: 0})
+  const handleEndEdgeDrag = (e: MouseEvent) => {
+    lastMousePosition.current.x = e.clientX
+    lastMousePosition.current.y = e.clientY
+    onSetDrawEdgeId('')
   }
 
   useEffect(() => {
@@ -132,7 +140,8 @@ const FlowEdge: React.FC<FlowEdgeProps> = ({
         document.removeEventListener('mouseup', handleEndEdgeDrag as any);
       };
     }
-  }, [data.id, isDrawing]);
+  }, [data, isDrawing]);
+
   return (
     <div
       ref={nodeRef}

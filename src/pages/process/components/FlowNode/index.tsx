@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import styles from './index.module.scss';
-import type { NodeData, DragItem, PositionType, ResizeType } from '../flowTypes';
+import type { NodeData, PositionType, ResizeType, PositionXY } from '../flowTypes';
 import classnames from 'classnames'
 import {
   SAFE_DISTANCE
@@ -9,28 +9,31 @@ import {
 interface FlowNodeProps {
   data: NodeData;
   zIndex: number
-  isSelected: boolean;
-  onSelect: (id: string) => void;
-  isHovered: boolean;
-  onHover: (id: string) => void;
+  isClick: boolean;
+  onNodeClick: (id: string) => void;
+  isHover: boolean;
+  onNodeHover: (id: string) => void;
+  isMove: boolean;
+  onNodeMouseMove: (x: number, y: number, id: string) => void
   onStartEdgeDrag: (
     data: NodeData,
-    handleType: PositionType,
-    x: number,
-    y: number
-  ) => void;
-  onDragStart: (e: React.DragEvent, item: DragItem) => void;
+    handleType: PositionType
+  ) => void
+  onSetMoveNode: (data: NodeData) => void
 }
 
 const FlowNode: React.FC<FlowNodeProps> = ({
   data,
-  isSelected,
+  isClick,
   zIndex,
-  onSelect,
-  isHovered,
-  onHover,
+  onNodeClick,
+  isHover,
+  onNodeHover,
+  isMove,
+  onSetMoveNode,
+  onNodeMouseMove,
   onStartEdgeDrag,
-  onDragStart,
+
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -66,7 +69,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
         ctx.strokeStyle = '#333333';
         ctx.lineWidth = 2;
         ctx.fillRect(0, 0, data.width, data.height);
-        ctx.strokeRect(SAFE_DISTANCE, SAFE_DISTANCE, data.width - 20, data.height - 20);
+        ctx.strokeRect(SAFE_DISTANCE, SAFE_DISTANCE, data.width - SAFE_DISTANCE * 2, data.height - SAFE_DISTANCE * 2);
         break;
       case 'diamond':
         ctx.fillStyle = 'transparent';
@@ -104,7 +107,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
-    onStartEdgeDrag(data, handleType, e.clientX, e.clientY);
+    onStartEdgeDrag(data, handleType);
   };
   const handleResize = (
     handleType: ResizeType,
@@ -114,6 +117,39 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     // onStartEdgeDrag(data, handleType);
   };
 
+  const nodePosition = useRef<PositionXY>({x: 0, y: 0})
+  const handleNodeMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    nodePosition.current.x = e.clientX - data.x
+    nodePosition.current.y = e.clientY - data.y
+    onSetMoveNode(data)
+  }
+  const handleNodeMouseMove = (e: MouseEvent) => {
+    if (!isMove) {
+      document.removeEventListener('mousemove', handleNodeMouseMove as any);
+      document.removeEventListener('mouseup', handleNodeMouseUp as any);
+      return
+    }
+    const moveX = e.clientX - nodePosition.current.x
+    const moveY = e.clientY - nodePosition.current.y
+    onNodeMouseMove(moveX, moveY, data.id)
+  }
+  const handleNodeMouseUp = () => {
+    nodePosition.current.x = 0
+    nodePosition.current.y = 0
+    onSetMoveNode({} as NodeData)
+  }
+
+    useEffect(() => {
+      if (data.id) {
+        document.addEventListener('mousemove', handleNodeMouseMove as any);
+        document.addEventListener('mouseup', handleNodeMouseUp as any);
+        return () => {
+          document.removeEventListener('mousemove', handleNodeMouseMove as any);
+          document.removeEventListener('mouseup', handleNodeMouseUp as any);
+        };
+      }
+    }, [data.id, isMove]);
+
   return (
     <div
       ref={nodeRef}
@@ -121,16 +157,16 @@ const FlowNode: React.FC<FlowNodeProps> = ({
       className={styles.flowNode}
       // 相对于flowCanvas的定位
       style={{
-        zIndex: zIndex,
+        zIndex,
         left: data.x,
         top: data.y,
         width: data.width,
         height: data.height,
       }}
-      onClick={() => onSelect(data.id)}
-      onMouseEnter={() => onHover(data.id)}
-      onMouseLeave={() => onHover('')}
-      onDragStart={(e) => onDragStart(e, { type: 'node', id: data.id })}
+      onClick={() => onNodeClick(data.id)}
+      onMouseDown={handleNodeMouseDown}
+      onMouseEnter={() => onNodeHover(data.id)}
+      onMouseLeave={() => onNodeHover('')}
     >
       <canvas
         ref={canvasRef}
@@ -139,7 +175,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
         className={styles.nodeCanvas}
       />
       {/* 画折线的4个小圆点 */}
-      {isHovered && (
+      {isHover && (
         <>
           <div
             className={classnames(styles.handle, styles.top)}
@@ -160,7 +196,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
         </>
       )}
       {/* 调整大小的8个小点 */}
-      {isSelected && (
+      {isClick && (
         <>
           <div
             className={classnames(styles.handle,
@@ -202,6 +238,6 @@ const FlowNode: React.FC<FlowNodeProps> = ({
       )}
     </div>
   );
-};
+}
 
 export default FlowNode;

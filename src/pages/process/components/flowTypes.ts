@@ -13,7 +13,9 @@ export interface NodeData {
   sourceHandle?: PositionType
   target?: string;
   targetHandle?: PositionType
-  points?: Array<PositionXY>;
+  points?: Array<{type: PositionType, id: string}>;
+  boxLeft?: number
+  boxTop?: number
 }
 
 export interface DragItem {
@@ -21,7 +23,6 @@ export interface DragItem {
   id?: string;
   nodeType?: 'rectangle' | 'diamond' | 'circle';
 }
-
 export interface PositionXY {
   x: number
   y: number
