@@ -1,40 +1,55 @@
 export type PositionType = 'top' | 'right' | 'bottom' | 'left';
-export type ResizeType = PositionType | 'topLeft' | 'topRight' | 'bottomRight' | 'bottomLeft'
+export type AllPositionType = PositionType | 'topLeft' | 'topRight' | 'bottomRight' | 'bottomLeft'
 export type NodeType = 'rectangle' | 'diamond' | 'circle';
-export interface NodeData {
+
+export interface SizeWH {
+  width: number
+  height: number
+}
+
+export interface PositionXY {
+  x: number
+  y: number
+}
+
+interface NodeBasicData {
   id: string;
   strikeType: 'node' | 'edge'
   type?: NodeType
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   text?: string;
   source?: string;
-  sourceHandle?: PositionType
+  sourceHandle?: AllPositionType
   target?: string;
   targetHandle?: PositionType
   points?: Array<PointData>
-  boxLeft?: number
-  boxTop?: number
+  boxLeft: number
+  boxTop: number
   clientX?: number
   clientY?: number
 }
+export type NodeData = PositionXY & SizeWH & NodeBasicData
 
 export interface DragItem {
   type: 'node' | 'nodeType';
   id?: string;
   nodeType?: NodeType
 }
-export interface PositionXY {
-  x: number
-  y: number
+
+interface PointBasic {
+  type?: AllPositionType
+  id?: string
 }
 
-export interface PointData extends PositionXY {
-  type: PositionType
-  id: string
+export type PointData = PointBasic & PositionXY
+
+export type ChangeType = keyof SizeWH | keyof PositionXY
+
+export type ResizePoint = SizeWH & PositionXY & {
+  id?: string
+  changeType: Array<ChangeType>
 }
+
+export type ResizePosition = SizeWH & PositionXY & PointBasic
 
 export type PathAry = Array<PositionXY>
 

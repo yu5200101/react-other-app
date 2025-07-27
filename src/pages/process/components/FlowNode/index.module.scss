@@ -2,6 +2,7 @@
   position: absolute;
   cursor: move;
   transition: opacity 0.2s;
+
   .nodeCanvas {
     width: 100%;
     height: 100%;
@@ -19,6 +20,22 @@
     z-index: 10;
     &.rect {
       border-radius: unset;
+    }
+    // 水平
+    &.ew {
+      cursor: ew-resize;
+    }
+    // 垂直
+    &.ns {
+      cursor: ns-resize;
+    }
+    // 对角线 左下右上
+    &.nesw {
+      cursor: nesw-resize;
+    }
+    // 对角线 左上右下
+    &.nwse {
+      cursor: nwse-resize;
     }
     &.top-left {
       top: 5px;

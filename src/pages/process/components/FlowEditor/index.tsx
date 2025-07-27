@@ -4,7 +4,7 @@ import FlowNode from '../FlowNode';
 import FlowEdge from '../FlowEdge';
 import Sidebar from '../Sidebar';
 import { useImmer } from 'use-immer'
-import type { NodeData, DragItem, PositionType, PointData } from '../flowTypes';
+import type { NodeData, DragItem, PositionType, PointData, ResizePoint } from '../flowTypes';
 import {
   SAFE_DISTANCE
 } from '../FlowEdge/handlePath'
@@ -16,6 +16,7 @@ const FlowEditor: React.FC = React.memo(() => {
   const [moveNode, setMoveNode] = useState<NodeData>({} as NodeData);
   const canvasBoxRef = useRef<HTMLDivElement>(null);
   const [drawEdgeId, setDrawEdgeId] = useState<string>('')
+  const [resizeNode, setResizeNode] = useState<NodeData>({} as NodeData)
 
   const handleDragStart = useCallback((e: React.DragEvent, item: DragItem) => {
     e.dataTransfer.setData('application/json', JSON.stringify(item));
@@ -46,6 +47,8 @@ const FlowEditor: React.FC = React.memo(() => {
         strikeType: 'node',
         x,
         y,
+        boxLeft: canvasBox.left,
+        boxTop: canvasBox.top,
         width: 140,
         height: 92,
       };
@@ -56,23 +59,25 @@ const FlowEditor: React.FC = React.memo(() => {
     }
   }, [setNodes])
 
-  const handleStartEdgeDrag = useCallback((
+  const handleClickEdgePoint = useCallback((
     data: NodeData,
     handleType: PositionType
   ) => {
-    const canvasBox = canvasBoxRef.current?.getBoundingClientRect();
-    if (!canvasBox) return
     const id = `edge-${Date.now()}`
     const newEdge: NodeData = {
       id,
       strikeType: 'edge',
       source: data.id,
       sourceHandle: handleType,
-      boxLeft: canvasBox.left,
-      boxTop: canvasBox.top,
+      boxLeft: data.boxLeft,
+      boxTop: data.boxTop,
+      // 可见box距离左侧距离
       x: data.x + SAFE_DISTANCE,
+      // 可见box距离上边距离
       y: data.y + SAFE_DISTANCE,
+      // 可见box的宽
       width: data.width - SAFE_DISTANCE * 2,
+      // 可见box的高
       height: data.height - SAFE_DISTANCE * 2
     };
     setDrawEdgeId(id)
@@ -125,6 +130,51 @@ const FlowEditor: React.FC = React.memo(() => {
     })
   }, [setNodes])
 
+  const handleNodeMouseResize = useCallback(({
+    width,
+    height,
+    x,
+    y,
+    id,
+    changeType
+  }: ResizePoint) => {
+    setNodes((draft) => {
+      const todo = draft.find((item) => item.id === id) as NodeData
+      if (todo) {
+        if (changeType.includes('width')) {
+          todo.width = width
+        }
+        if (changeType.includes('height')) {
+          todo.height = height
+        }
+        if (changeType.includes('x')) {
+          todo.x = x
+        }
+        if (changeType.includes('y')) {
+          todo.y = y
+        }
+      }
+      if (Array.isArray(todo.points)) {
+        const edgeIdList = todo.points.map(item => item.id)
+        edgeIdList.forEach(edgeId => {
+          const edgeTodo = draft.find((item) => item.id === edgeId) as NodeData
+          if (changeType.includes('width')) {
+            edgeTodo.width = width - SAFE_DISTANCE * 2
+          }
+          if (changeType.includes('height')) {
+            edgeTodo.height = height - SAFE_DISTANCE * 2
+          }
+          if (changeType.includes('x')) {
+            edgeTodo.x = x + SAFE_DISTANCE
+          }
+          if (changeType.includes('y')) {
+            edgeTodo.y = y + SAFE_DISTANCE
+          }
+        })
+      }
+    })
+  }, [setNodes])
+
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement
     if (!target.className.includes('nodeCanvas')) {
@@ -134,9 +184,12 @@ const FlowEditor: React.FC = React.memo(() => {
 
   const getIsDrawing = useCallback((id: string): boolean => {
     const todo = nodes.find((item) => item.id === id) as NodeData
+    // 拖拽node
     if (todo.source === moveNode.id) return true
+    // 缩放node
+    if (todo.source === resizeNode.id) return true
     return false
-  }, [moveNode, nodes])
+  }, [moveNode, resizeNode, nodes])
 
   return (
     <div className={styles.flowEditor}>
@@ -156,13 +209,16 @@ const FlowEditor: React.FC = React.memo(() => {
             key={node.id}
             data={node}
             isMove={moveNode.id === node.id}
+            isResize={resizeNode.id === node.id}
             isClick={clickNodeId === node.id}
             isHover={hoverNodeId === node.id}
             onNodeHover={setHoverNodeId}
             onNodeClick={setClickNodeId}
             onSetMoveNode={setMoveNode}
-            onStartEdgeDrag={handleStartEdgeDrag}
+            onSetResizeNode={setResizeNode}
+            onClickEdgePoint={handleClickEdgePoint}
             onNodeMouseMove={handleNodeMouseMove}
+            onNodeMouseResize={handleNodeMouseResize}
           /> :
           // 折线
           <FlowEdge

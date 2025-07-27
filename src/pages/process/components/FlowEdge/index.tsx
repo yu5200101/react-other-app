@@ -8,7 +8,7 @@ import {
   handleLeftPath,
   handleBottomPath
 } from './handlePath'
-
+import { getHandlePosition } from '../modules/utils'
 interface FlowEdgeProps {
   data: NodeData;
   isDrawing: boolean
@@ -17,27 +17,6 @@ interface FlowEdgeProps {
   onSetDrawEdgeId: (val: string) => void
   onEdgeMouseUp: (x: number, y: number, data: NodeData) => void
 }
-
-const getHandlePosition = (
-  node: NodeData
-): PositionXY => {
-  switch (node.sourceHandle) {
-    case 'top':
-      return { x: node.x + node.width / 2, y: node.y };
-    case 'right':
-      return { x: node.x + node.width, y: node.y + node.height / 2 };
-    case 'bottom':
-      return { x: node.x + node.width / 2, y: node.y + node.height };
-    case 'left':
-      return { x: node.x, y: node.y + node.height / 2 };
-    default: {
-      return {
-        x: 0,
-        y: 0
-      }
-    }
-  }
-};
 
 // 绘制箭头
 const drawArrow = (ctx: CanvasRenderingContext2D, from: PositionXY, to: PositionXY) => {
@@ -121,8 +100,8 @@ const FlowEdge: React.FC<FlowEdgeProps> = React.memo(({
       const firstX = (isNodeChangeForDraw ? data.clientX : e.clientX) as number
       const firstY = (isNodeChangeForDraw ? data.clientY : e.clientY) as number
       const startPositionTL = isNodeChangeForDraw ? {x, y} : originPositionTL.current
-      const moveX = firstX - (data.boxLeft as number) - x
-      const moveY = firstY - (data.boxTop as number) - y
+      const moveX = firstX - data.boxLeft - x
+      const moveY = firstY - data.boxTop - y
       // 根据当前方向生成路径
       const currentPath = generatePath({
         x: moveX,
