@@ -1,32 +1,33 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import styles from './index.module.scss';
 import FlowNode from '../FlowNode';
 import FlowEdge from '../FlowEdge';
 import Sidebar from '../Sidebar';
 import { useImmer } from 'use-immer'
-import type { NodeData, DragItem } from '../flowTypes';
+import type { NodeData, DragItem, PositionType, PointData } from '../flowTypes';
 import {
   SAFE_DISTANCE
 } from '../FlowEdge/handlePath'
 
-const FlowEditor: React.FC = () => {
+const FlowEditor: React.FC = React.memo(() => {
   const [nodes, setNodes] = useImmer<NodeData[]>([]);
   const [clickNodeId, setClickNodeId] = useState<string | null>(null);
   const [hoverNodeId, setHoverNodeId] = useState<string | null>(null);
   const [moveNode, setMoveNode] = useState<NodeData>({} as NodeData);
   const canvasBoxRef = useRef<HTMLDivElement>(null);
   const [drawEdgeId, setDrawEdgeId] = useState<string>('')
-  const handleDragStart = (e: React.DragEvent, item: DragItem) => {
+
+  const handleDragStart = useCallback((e: React.DragEvent, item: DragItem) => {
     e.dataTransfer.setData('application/json', JSON.stringify(item));
     e.dataTransfer.effectAllowed = 'move';
-  };
+  }, [])
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  };
+  }, [])
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const data = e.dataTransfer.getData('application/json');
     if (!data) return;
@@ -53,11 +54,11 @@ const FlowEditor: React.FC = () => {
         draft.push(newNode)
       })
     }
-  };
+  }, [setNodes])
 
-  const handleStartEdgeDrag = (
+  const handleStartEdgeDrag = useCallback((
     data: NodeData,
-    handleType: 'top' | 'right' | 'bottom' | 'left'
+    handleType: PositionType
   ) => {
     const canvasBox = canvasBoxRef.current?.getBoundingClientRect();
     if (!canvasBox) return
@@ -76,16 +77,37 @@ const FlowEditor: React.FC = () => {
     };
     setDrawEdgeId(id)
     setNodes((draft) => {
-      const todo = draft.find((item) => item.id === data.id) as NodeData
+      draft.push(newEdge)
+    })
+  }, [setDrawEdgeId, setNodes])
+
+  const handleEdgeMouseUp = useCallback((x: number, y: number, data: NodeData) => {
+    setNodes((draft) => {
+      const edgeTodo = draft.find((item) => item.id === data.id) as NodeData
+      if (edgeTodo) {
+        edgeTodo.clientX = x
+        edgeTodo.clientY = y
+      }
+      const todo = draft.find((item) => item.id === data.source) as NodeData
       if (!Array.isArray(todo.points)) {
         todo.points = []
       }
-      todo.points.push({type: handleType, id})
-      draft.push(newEdge)
+      const point = todo.points.find(item => item.type === data.sourceHandle) as PointData
+      if (point) {
+        point.x = x
+        point.y = y
+      } else {
+        todo.points.push({
+          type: data.sourceHandle as PositionType,
+          id: data.id,
+          x,
+          y
+        })
+      }
     })
-  }
+  }, [setNodes])
 
-  const handleNodeMouseMove = (x: number, y: number, id: string) => {
+  const handleNodeMouseMove = useCallback((x: number, y: number, id: string) => {
     setNodes((draft) => {
       const todo = draft.find((item) => item.id === id) as NodeData
       if (todo) {
@@ -101,18 +123,20 @@ const FlowEditor: React.FC = () => {
         })
       }
     })
-  }
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  }, [setNodes])
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement
     if (!target.className.includes('nodeCanvas')) {
       setClickNodeId('')
     }
-  }
-  const getIsDrawing = (id: string): boolean => {
+  }, [setClickNodeId])
+
+  const getIsDrawing = useCallback((id: string): boolean => {
     const todo = nodes.find((item) => item.id === id) as NodeData
     if (todo.source === moveNode.id) return true
     return false
-  }
+  }, [moveNode, nodes])
 
   return (
     <div className={styles.flowEditor}>
@@ -145,6 +169,7 @@ const FlowEditor: React.FC = () => {
             isDrawing={drawEdgeId === node.id || getIsDrawing(node.id)}
             isNodeChangeForDraw={getIsDrawing(node.id)}
             onSetDrawEdgeId={setDrawEdgeId}
+            onEdgeMouseUp={handleEdgeMouseUp}
             key={node.id}
             data={node}
             zIndex={index + 1}
@@ -153,6 +178,6 @@ const FlowEditor: React.FC = () => {
       </div>
     </div>
   );
-};
+})
 
 export default FlowEditor;

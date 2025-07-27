@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './index.module.scss';
-import type { DragItem } from '../flowTypes';
+import type { DragItem, NodeType } from '../flowTypes';
 
 interface SidebarProps {
   onDragStart: (e: React.DragEvent, item: DragItem) => void;
@@ -12,7 +12,7 @@ const nodeTypes = [
   { type: 'circle', label: '开始/结束' },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
+const Sidebar: React.FC<SidebarProps> = React.memo(({ onDragStart }) => {
   return (
     <div className={styles.sidebar}>
       <h3>节点类型</h3>
@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
             className={styles.nodeType}
             draggable
             onDragStart={(e) =>
-              onDragStart(e, { type: 'nodeType', nodeType: nodeType.type })
+              onDragStart(e, { type: 'nodeType', nodeType: nodeType.type as NodeType })
             }
           >
             {nodeType.label}
@@ -32,6 +32,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
       </div>
     </div>
   );
-};
+})
 
 export default Sidebar;

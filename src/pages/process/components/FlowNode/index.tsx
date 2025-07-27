@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import styles from './index.module.scss';
 import type { NodeData, PositionType, ResizeType, PositionXY } from '../flowTypes';
 import classnames from 'classnames'
@@ -22,7 +22,7 @@ interface FlowNodeProps {
   onSetMoveNode: (data: NodeData) => void
 }
 
-const FlowNode: React.FC<FlowNodeProps> = ({
+const FlowNode: React.FC<FlowNodeProps> = React.memo(({
   data,
   isClick,
   zIndex,
@@ -102,28 +102,31 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     }
   }, [data]);
 
-  const handlePoint = (
+  const handlePoint = useCallback((
     handleType: PositionType,
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
     onStartEdgeDrag(data, handleType);
-  };
-  const handleResize = (
+  }, [onStartEdgeDrag, data])
+
+  const handleResize = useCallback((
     handleType: ResizeType,
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
     // onStartEdgeDrag(data, handleType);
-  };
+  }, [])
 
   const nodePosition = useRef<PositionXY>({x: 0, y: 0})
-  const handleNodeMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+
+  const handleNodeMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     nodePosition.current.x = e.clientX - data.x
     nodePosition.current.y = e.clientY - data.y
     onSetMoveNode(data)
-  }
-  const handleNodeMouseMove = (e: MouseEvent) => {
+  }, [onSetMoveNode, data])
+
+  const handleNodeMouseMove = useCallback((e: MouseEvent) => {
     if (!isMove) {
       document.removeEventListener('mousemove', handleNodeMouseMove as any);
       document.removeEventListener('mouseup', handleNodeMouseUp as any);
@@ -132,12 +135,13 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     const moveX = e.clientX - nodePosition.current.x
     const moveY = e.clientY - nodePosition.current.y
     onNodeMouseMove(moveX, moveY, data.id)
-  }
-  const handleNodeMouseUp = () => {
+  }, [onNodeMouseMove, data.id, isMove])
+
+  const handleNodeMouseUp = useCallback(() => {
     nodePosition.current.x = 0
     nodePosition.current.y = 0
     onSetMoveNode({} as NodeData)
-  }
+  }, [onSetMoveNode])
 
     useEffect(() => {
       if (data.id) {
@@ -238,6 +242,6 @@ const FlowNode: React.FC<FlowNodeProps> = ({
       )}
     </div>
   );
-}
+})
 
 export default FlowNode;
