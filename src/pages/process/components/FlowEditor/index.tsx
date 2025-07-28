@@ -177,9 +177,9 @@ const FlowEditor: React.FC = React.memo(() => {
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement
-    if (!target.className.includes('nodeCanvas')) {
-      setClickNodeId('')
-    }
+    if (target.className.includes('nodeCanvas')) return
+    if (target.className.includes('node-control-point')) return
+    setClickNodeId('')
   }, [setClickNodeId])
 
   const getIsDrawing = useCallback((id: string): boolean => {

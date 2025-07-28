@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import styles from './index.module.scss';
 import type { NodeData, PositionType, AllPositionType, PositionXY, ResizePoint, ResizePosition, ChangeType } from '../flowTypes';
 import classnames from 'classnames'
@@ -118,15 +118,19 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
 
   const nodePosition = useRef<PositionXY>({x: 0, y: 0})
 
+  const moveFlag = useRef<boolean>(false)
+
   const handleNodeMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     nodePosition.current.x = e.clientX - data.x
     nodePosition.current.y = e.clientY - data.y
+    moveFlag.current = true
     onSetMoveNode(data)
-  }, [onSetMoveNode, data])
+    onNodeClick(data.id)
+  }, [onSetMoveNode, data, onNodeClick])
 
   const handleNodeMouseMove = useCallback((e: MouseEvent) => {
     requestAnimationFrame(() => {
-      if (!isMove) {
+      if (!isMove || !moveFlag.current) {
         document.removeEventListener('mousemove', handleNodeMouseMove as any);
         document.removeEventListener('mouseup', handleNodeMouseMoveUp as any);
         return
@@ -140,6 +144,7 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
   const handleNodeMouseMoveUp = useCallback(() => {
     nodePosition.current.x = 0
     nodePosition.current.y = 0
+    moveFlag.current = false
     onSetMoveNode({} as NodeData)
   }, [onSetMoveNode])
 
@@ -180,6 +185,7 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
       height: data.height - SAFE_DISTANCE * 2
     }
     const {x, y} = getHandlePosition(pointData)
+    moveFlag.current = true
     // 控制定位
     nodePosition.current.x = e.clientX - data.x
     nodePosition.current.y = e.clientY - data.y
@@ -194,7 +200,7 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
 
   const handleNodeMouseResizeMove = useCallback((e: MouseEvent) => {
     requestAnimationFrame(() => {
-      if (!isResize) {
+      if (!isResize || !moveFlag.current) {
         document.removeEventListener('mousemove', handleNodeMouseResizeMove as any);
         document.removeEventListener('mouseup', handleNodeMouseResizeUp as any);
         return
@@ -254,6 +260,7 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
   }, [onNodeMouseResize, data.id, isResize])
 
   const handleNodeMouseResizeUp = useCallback(() => {
+    moveFlag.current = false
     nodePosition.current.x = 0
     nodePosition.current.y = 0
     nodeResizePosition.current.x = 0
@@ -288,7 +295,6 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
         width: data.width,
         height: data.height,
       }}
-      onClick={() => onNodeClick(data.id)}
       onMouseDown={handleNodeMouseDown}
       onMouseEnter={() => onNodeHover(data.id)}
       onMouseLeave={() => onNodeHover('')}
@@ -303,19 +309,19 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
       {isHover && (
         <>
           <div
-            className={classnames(styles.handle, styles.top)}
+            className={classnames(styles['node-control-point'], styles.top)}
             onMouseDown={(e) => handleEdgePoint('top', e)}
           />
           <div
-            className={classnames(styles.handle, styles.right)}
+            className={classnames(styles['node-control-point'], styles.right)}
             onMouseDown={(e) => handleEdgePoint('right', e)}
           />
           <div
-            className={classnames(styles.handle, styles.bottom)}
+            className={classnames(styles['node-control-point'], styles.bottom)}
             onMouseDown={(e) => handleEdgePoint('bottom', e)}
           />
           <div
-            className={classnames(styles.handle, styles.left)}
+            className={classnames(styles['node-control-point'], styles.left)}
             onMouseDown={(e) => handleEdgePoint('left', e)}
           />
         </>
@@ -324,39 +330,39 @@ const FlowNode: React.FC<FlowNodeProps> = React.memo(({
       {isClick && (
         <>
           <div
-            className={classnames(styles.handle,
+            className={classnames(styles['node-control-point'],
               styles.rect, styles['top-left'], styles.nwse)}
             onMouseDown={(e) => handleResizePoint('topLeft', e)}
           />
           <div
-            className={classnames(styles.handle,
+            className={classnames(styles['node-control-point'],
               styles.rect, styles.top, styles.ns)}
             onMouseDown={(e) => handleResizePoint('top', e)}
           />
           <div
-            className={classnames(styles.handle,
+            className={classnames(styles['node-control-point'],
               styles.rect, styles['top-right'], styles.nesw)}
             onMouseDown={(e) => handleResizePoint('topRight', e)}
           />
           <div
-            className={classnames(styles.handle, styles.rect, styles.right, styles.ew)}
+            className={classnames(styles['node-control-point'], styles.rect, styles.right, styles.ew)}
             onMouseDown={(e) => handleResizePoint('right', e)}
           />
           <div
-            className={classnames(styles.handle,
+            className={classnames(styles['node-control-point'],
               styles.rect, styles['bottom-right'], styles.nwse)}
             onMouseDown={(e) => handleResizePoint('bottomRight', e)}
           />
           <div
-            className={classnames(styles.handle, styles.rect, styles.bottom, styles.ns)}
+            className={classnames(styles['node-control-point'], styles.rect, styles.bottom, styles.ns)}
             onMouseDown={(e) => handleResizePoint('bottom', e)}
           />
           <div
-            className={classnames(styles.handle, styles.rect, styles['bottom-left'], styles.nesw)}
+            className={classnames(styles['node-control-point'], styles.rect, styles['bottom-left'], styles.nesw)}
             onMouseDown={(e) => handleResizePoint('bottomLeft', e)}
           />
           <div
-            className={classnames(styles.handle, styles.rect, styles.left, styles.ew)}
+            className={classnames(styles['node-control-point'], styles.rect, styles.left, styles.ew)}
             onMouseDown={(e) => handleResizePoint('left', e)}
           />
         </>
