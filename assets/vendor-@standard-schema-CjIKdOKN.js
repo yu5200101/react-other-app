@@ -1,0 +1,1 @@
+var e=Object.defineProperty,s=(s,r,t)=>((s,r,t)=>r in s?e(s,r,{enumerable:!0,configurable:!0,writable:!0,value:t}):s[r]=t)(s,"symbol"!=typeof r?r+"":r,t),r=class extends Error{constructor(e){super(e[0].message),s(this,"issues"),this.name="SchemaError",this.issues=e}};export{r as S};

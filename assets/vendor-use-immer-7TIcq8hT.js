@@ -1,0 +1,1 @@
+import{f as r,p as t}from"./vendor-immer-CSgRT0_L.js";import{r as n}from"./vendor-react-BVfqOVDk.js";function o(o){var e=n.useState((function(){return r("function"==typeof o?o():o,!0)})),f=e[1];return[e[0],n.useCallback((function(n){f("function"==typeof n?t(n):r(n))}),[])]}export{o as i};

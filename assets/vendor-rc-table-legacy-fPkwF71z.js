@@ -1,0 +1,1 @@
+System.register(["./vendor-react-legacy-Cc0hGaC1.js","./vendor-rc-util-legacy-ydZTfFiK.js","./vendor-react-dom-legacy-DBed12rO.js","./vendor-classnames-legacy-FF-SgJeE.js","./vendor-rc-resize-observer-legacy-DMFtlC26.js","./vendor-rc-virtual-list-legacy-AKVMpYiw.js"],(function(e,l){"use strict";return{setters:[null,null,null,null,null,null],execute:function(){}}}));
