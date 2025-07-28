@@ -3,6 +3,8 @@ import styles from './index.module.scss';
 import FlowNode from '../FlowNode';
 import FlowEdge from '../FlowEdge';
 import Sidebar from '../Sidebar';
+import HoverControlPoint from '../HoverControlPoint'
+import ClickControlPoint from '../ClickControlPoint'
 import { useImmer } from 'use-immer'
 import type { NodeData, DragItem, PositionType, PointData, ResizePoint } from '../flowTypes';
 import {
@@ -12,7 +14,7 @@ import {
 const FlowEditor: React.FC = React.memo(() => {
   const [nodes, setNodes] = useImmer<NodeData[]>([]);
   const [clickNodeId, setClickNodeId] = useState<string | null>(null);
-  const [hoverNodeId, setHoverNodeId] = useState<string | null>(null);
+  const [hoverNode, setHoverNode] = useState<NodeData>({} as NodeData)
   const [moveNode, setMoveNode] = useState<NodeData>({} as NodeData);
   const canvasBoxRef = useRef<HTMLDivElement>(null);
   const [drawEdgeId, setDrawEdgeId] = useState<string>('')
@@ -179,6 +181,8 @@ const FlowEditor: React.FC = React.memo(() => {
     const target = e.target as HTMLDivElement
     if (target.className.includes('nodeCanvas')) return
     if (target.className.includes('node-control-point')) return
+    if (target.className.includes('box-hover-control')) return
+    if (target.className.includes('box-click-control')) return
     setClickNodeId('')
   }, [setClickNodeId])
 
@@ -208,17 +212,7 @@ const FlowEditor: React.FC = React.memo(() => {
             zIndex={index + 1}
             key={node.id}
             data={node}
-            isMove={moveNode.id === node.id}
-            isResize={resizeNode.id === node.id}
-            isClick={clickNodeId === node.id}
-            isHover={hoverNodeId === node.id}
-            onNodeHover={setHoverNodeId}
-            onNodeClick={setClickNodeId}
-            onSetMoveNode={setMoveNode}
-            onSetResizeNode={setResizeNode}
-            onClickEdgePoint={handleClickEdgePoint}
-            onNodeMouseMove={handleNodeMouseMove}
-            onNodeMouseResize={handleNodeMouseResize}
+            onNodeHover={setHoverNode}
           /> :
           // 折线
           <FlowEdge
@@ -231,6 +225,28 @@ const FlowEditor: React.FC = React.memo(() => {
             zIndex={index + 1}
           />
         ))}
+        {
+          hoverNode.id && <HoverControlPoint
+            isMove={moveNode.id === hoverNode.id}
+            data={nodes.find(item => item.id === hoverNode.id) as NodeData}
+            zIndex={nodes.length + 1}
+            onClickEdgePoint={handleClickEdgePoint}
+            onNodeHover={setHoverNode}
+            onNodeClick={setClickNodeId}
+            onNodeMouseMove={handleNodeMouseMove}
+            onSetMoveNode={setMoveNode}
+          />
+        }
+        {
+          clickNodeId && <ClickControlPoint
+            isResize={resizeNode.id === clickNodeId}
+            data={nodes.find(item => item.id === clickNodeId) as NodeData}
+            zIndex={nodes.length + 1}
+            onNodeHover={setHoverNode}
+            onSetResizeNode={setResizeNode}
+            onNodeMouseResize={handleNodeMouseResize}
+          />
+        }
       </div>
     </div>
   );

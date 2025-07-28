@@ -1,0 +1,71 @@
+.box-click-control {
+  position: absolute;
+
+  .node-control-point {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    box-sizing: border-box;
+    border: 1px solid #1890ff;
+    border-radius: 50%;
+    cursor: crosshair;
+
+    &.rect {
+      border-radius: unset;
+    }
+    // 水平
+    &.ew {
+      cursor: ew-resize;
+    }
+    // 垂直
+    &.ns {
+      cursor: ns-resize;
+    }
+    // 对角线 左下右上
+    &.nesw {
+      cursor: nesw-resize;
+    }
+    // 对角线 左上右下
+    &.nwse {
+      cursor: nwse-resize;
+    }
+
+    &.top {
+      top: -5px;
+      left: 50%;
+      transform: translate(-50%, 0)
+    }
+    &.right {
+      top: 50%;
+      right: -5px;
+      transform: translate(0, -50%)
+    }
+    &.bottom {
+      bottom: -5px;
+      left: 50%;
+      transform: translate(-50%, 0)
+    }
+    &.left {
+      left: -5px;
+      top: 50%;
+      transform: translate(0, -50%)
+    }
+    &.top-left {
+      top: -5px;
+      left: -5px;
+    }
+    &.top-right {
+      top: -5px;
+      right: -5px;
+    }
+    &.bottom-left {
+      bottom: -5px;
+      left: -5px;
+    }
+    &.bottom-right {
+      bottom: -5px;
+      right: -5px;
+    }
+  }
+}
